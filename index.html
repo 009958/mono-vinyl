@@ -995,13 +995,26 @@ function applyFont(){
 
 /* ── 이미지 저장 ── */
 function saveImage(){
-  html2canvas(document.getElementById('sheetCard'),
-    {scale:2,useCORS:true,backgroundColor:null,logging:false})
+  const card=document.getElementById('sheetCard');
+  const origWidth=card.style.width;
+  const origMaxWidth=card.style.maxWidth;
+
+  // 저장 시 강제로 690px 고정
+  card.style.width='690px';
+  card.style.maxWidth='690px';
+
+  html2canvas(card,{scale:2,useCORS:true,backgroundColor:null,logging:false})
   .then(canvas=>{
+    // 원래 사이즈 복원
+    card.style.width=origWidth;
+    card.style.maxWidth=origMaxWidth;
     const a=document.createElement('a');
     a.download='ulsebus_sheet.png';
     a.href=canvas.toDataURL('image/png');
     a.click();
+  }).catch(()=>{
+    card.style.width=origWidth;
+    card.style.maxWidth=origMaxWidth;
   });
 }
 
