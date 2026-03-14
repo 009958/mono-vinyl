@@ -99,7 +99,6 @@ header{
 .mine-btn:hover{border-color:#e05555;color:var(--text);}
 .mine-btn.active{background:#c0392b;border-color:#c0392b;color:#fff;}
 
-/* ── 직접입력 wrap ── */
 .etc-wrap{display:flex;align-items:center;gap:6px;margin-top:6px;}
 .etc-wrap input{
   flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);
@@ -166,7 +165,8 @@ header{
   align-items:center;padding:28px 20px;
   overflow-y:auto;
   height:100%;
-  min-width:0; /* grid 자식이 줄어들 수 있도록 */
+  min-width:0;
+  justify-content:space-between;
 }
 .preview-label{font-size:10px;letter-spacing:2px;color:var(--text-sub);
   text-transform:uppercase;margin-bottom:16px;font-family:'Gmarket Sans',sans-serif;}
@@ -201,7 +201,7 @@ header{
   flex-shrink:0;overflow:hidden;margin-bottom:-4px;
   box-shadow:0 4px 14px rgba(0,0,0,.45);
 }
-.sheet-avatar img{width:100%;height:100%;object-fit:cover;}
+.sheet-avatar img{width:100%;height:100%;object-fit:cover;object-position:center;}
 .sheet-names{flex:1;}
 .sheet-nickname{
   font-family:'Black Han Sans',sans-serif;font-size:22px;line-height:1.1;
@@ -251,7 +251,7 @@ header{
   body{overflow:auto;}
   .layout{grid-template-columns:1fr;height:auto;}
   .input-panel{height:auto;overflow-y:visible;}
-  .preview-panel{height:auto;overflow-y:visible;width:100%;padding:20px 12px;}
+  .preview-panel{height:auto;overflow-y:visible;width:100%;padding:20px 12px;justify-content:flex-start;gap:20px;}
   .sheet-card{max-width:100%;}
 }
 </style>
@@ -261,7 +261,7 @@ header{
 <header>
   <div>
     <div class="logo">울새버스 시트 생성기</div>
-    <div class="logo-sub">Ulse-Verse Sheet Generator</div>
+    <div class="logo-sub">Robin-Verse Sheet Generator</div>
   </div>
   <div class="hspacer"></div>
   <button class="theme-toggle" onclick="document.body.classList.toggle('dark-theme')">🌙 다크 / 라이트</button>
@@ -588,14 +588,16 @@ header{
 
 <!-- ═══ 미리보기 패널 ═══ -->
 <div class="preview-panel">
-  <div style="margin-bottom:16px;text-align:center;">
-    <div class="preview-label" style="margin-bottom:5px;">PREVIEW — 실시간 미리보기</div>
-    <div id="sizeLabel" style="font-size:10px;color:var(--text-sub);font-family:'Gmarket Sans',sans-serif;letter-spacing:.5px;">
-      이미지 픽셀 사이즈: <span style="color:var(--accent2);font-weight:700;">1380 × <span id="sheetHeightPx">—</span> px</span>
+  <!-- 상단: 라벨 + 시트 -->
+  <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
+    <div style="margin-bottom:16px;text-align:center;">
+      <div class="preview-label" style="margin-bottom:5px;">PREVIEW — 실시간 미리보기</div>
+      <div id="sizeLabel" style="font-size:10px;color:var(--text-sub);font-family:'Gmarket Sans',sans-serif;letter-spacing:.5px;">
+        이미지 픽셀 사이즈: <span style="color:var(--accent2);font-weight:700;">1380 × <span id="sheetHeightPx">—</span> px</span>
+      </div>
     </div>
-  </div>
 
-  <div class="sheet-card" id="sheetCard">
+    <div class="sheet-card" id="sheetCard">
 
     <!-- 배너 헤더 -->
     <div class="sheet-banner" id="sheetBanner">
@@ -620,7 +622,7 @@ header{
       <div class="sheet-col" id="sheetColLeft">
 
         <div class="sheet-sec" id="secBus" style="display:none">
-          <div class="sheet-sec-label">ULSE-VERSE</div>
+          <div class="sheet-sec-label">ROBIN-VERSE</div>
           <div class="sheet-tags" id="sheetBusTags"></div>
         </div>
 
@@ -678,6 +680,16 @@ header{
     </div>
 
   </div><!-- /sheet-card -->
+  </div><!-- /상단 wrap -->
+
+  <!-- 하단 크레딧 -->
+  <div style="margin-top:20px;text-align:center;font-size:11px;color:var(--text-sub);font-family:'Noto Sans KR',sans-serif;letter-spacing:.3px;opacity:.7;">
+    제작 | 축 (<a href="https://x.com/kxxlem_all">@kxxlem_all</a>)
+	<style>
+		a:visited { color: inherit;} /* 부모 요소로부터 상속받은 색상을 유지 */
+	</style>
+  </div>
+
 </div><!-- /preview-panel -->
 </div><!-- /layout -->
 
@@ -793,7 +805,8 @@ function applyCustom(){
 
 /* ── 태그 렌더 헬퍼 ── */
 function getTagLabel(btn){
-  // × span 제외하고 텍스트만 추출
+  const labelEl=btn.querySelector('.tag-label');
+  if(labelEl)return labelEl.textContent.trim();
   return Array.from(btn.childNodes)
     .filter(n=>n.nodeType===3)
     .map(n=>n.textContent.trim())
@@ -856,7 +869,7 @@ function setFub(val){
   updateSheet();
 }
 
-/* ── 태그 토글 ── */
+/* ── 태그 토글 (이벤트 위임) ── */
 function toggleTag(btn){btn.classList.toggle('active');updateSheet();}
 function toggleMine(btn){btn.classList.toggle('active');updateSheet();}
 
@@ -866,10 +879,18 @@ function addEtcTag(groupId,inputId){
   const val=inp.value.trim();if(!val)return;
   const btn=document.createElement('button');
   btn.className='tag-btn active';
-  btn.innerHTML=`${val} <span style="margin-left:4px;opacity:.7;font-size:11px;" onclick="event.stopPropagation();this.parentElement.remove();updateSheet();">×</span>`;
-  btn.onclick=function(){toggleTag(this);};
+  btn.innerHTML=
+    `<span class="tag-label">${val}</span>`
+    +`<span style="margin-left:4px;opacity:.6;font-size:11px;">×</span>`;
+  btn.addEventListener('click',function(e){
+    if(e.target.tagName==='SPAN'&&e.target.textContent==='×'){
+      e.stopPropagation();btn.remove();updateSheet();return;
+    }
+    btn.classList.toggle('active');updateSheet();
+  });
   document.getElementById(groupId).appendChild(btn);
-  inp.value='';updateSheet();
+  inp.value='';
+  updateSheet();
 }
 
 /* ── 메인 업데이트 ── */
@@ -923,8 +944,10 @@ function updateSheet(){
   likesBtns.forEach(b=>{
     const t=document.createElement('div');
     t.className='sheet-tag';
-    t.style.background=rgba(cc.tg,0.9);t.style.color=cc.tt;
-    t.textContent=getTagLabel(b);likesCont.appendChild(t);
+    t.style.background=b.dataset.bgColor||rgba(cc.tg,0.9);
+    t.style.color=b.dataset.textColor||cc.tt;
+    t.textContent=getTagLabel(b);
+    likesCont.appendChild(t);
   });
   document.getElementById('sheetLikesText').textContent=likes;
   const secLikes=document.getElementById('secLikes');
@@ -1009,7 +1032,7 @@ function saveImage(){
     card.style.width=origWidth;
     card.style.maxWidth=origMaxWidth;
     const a=document.createElement('a');
-    a.download='ulsebus_sheet.png';
+    a.download='robinbus_sheet.png';
     a.href=canvas.toDataURL('image/png');
     a.click();
   }).catch(()=>{
