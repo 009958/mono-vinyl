@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>울새버스 시트 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Gmarket+Sans:wght@300;500;700&family=Black+Han+Sans&family=Hahmlet:wght@300;400;500;700&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Do+Hyeon&family=Jua&family=Gaegu:wght@300;400;700&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#eef2f8;--panel:#fff;--panel2:#f4f7fc;
+  --border:#c8d4e8;--accent:#3a7bd5;--accent2:#2a60b0;
+  --text:#1a2236;--text-sub:#5a6e90;--tag-bg:#e4eaf5;
+}
+.dark-theme{
+  --bg:#0e1117;--panel:#131820;--panel2:#1a2030;
+  --border:#253048;--accent:#3a7bd5;--accent2:#7ec0ff;
+  --text:#f0f4ff;--text-sub:#96aece;--tag-bg:#1c2840;
+}
+.dark-theme header{background:linear-gradient(135deg,#0e1520,#111c2e);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow:hidden;}
+
+/* ── 헤더 ── */
+header{
+  background:linear-gradient(135deg,#e0e8f8,#d4dff0);
+  border-bottom:1px solid var(--border);padding:16px 28px;
+  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;
+}
+.logo{font-family:'Black Han Sans',sans-serif;font-size:20px;
+  background:linear-gradient(90deg,#3a7bd5,#5ea3f7,#a0c8ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-1px;}
+.logo-sub{font-size:10px;color:var(--text-sub);margin-top:2px;}
+.hspacer{flex:1;}
+.theme-toggle{background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;
+  font-family:'Noto Sans KR',sans-serif;transition:border-color .2s;}
+.theme-toggle:hover{border-color:var(--accent);}
+
+/* ── 레이아웃 ── */
+.layout{
+  display:grid;
+  grid-template-columns:500px 1fr;
+  height:calc(100vh - 57px);  /* 뷰포트 높이 고정 */
+}
+
+/* ── 입력 패널 ── */
+.input-panel{
+  background:var(--panel);border-right:1px solid var(--border);
+  overflow-y:auto;padding:22px 20px;
+  height:100%;  /* 부모 높이에 맞춤 */
+}
+.sec-title{
+  font-family:'Gmarket Sans',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--accent2);
+  margin-bottom:12px;margin-top:24px;padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+.sec-title:first-child{margin-top:0;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--text-sub);margin-bottom:4px;font-weight:500;}
+.field input,.field textarea,.field select{
+  width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:8px 11px;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;
+  outline:none;transition:border-color .2s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);}
+.field textarea{resize:vertical;min-height:70px;}
+.field select option{background:var(--panel2);color:var(--text);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ── 태그 버튼 ── */
+.tag-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
+.tag-btn{
+  background:var(--tag-bg);border:1px solid var(--border);color:var(--text-sub);
+  padding:5px 11px;border-radius:20px;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;transition:all .15s;user-select:none;
+}
+.tag-btn:hover{border-color:var(--accent);color:var(--text);}
+.tag-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ── FUB FREE ── */
+.fub-group{display:flex;gap:8px;margin-top:3px;}
+.fub-btn{
+  flex:1;padding:8px 0;background:var(--tag-bg);border:1px solid var(--border);
+  color:var(--text-sub);border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;text-align:center;transition:all .15s;user-select:none;font-weight:500;
+}
+.fub-btn:hover{border-color:var(--accent);color:var(--text);}
+.fub-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ── 지뢰 대응 ── */
+.mine-group{display:flex;gap:6px;margin-top:6px;}
+.mine-btn{
+  padding:5px 13px;background:var(--tag-bg);border:1px solid var(--border);
+  color:var(--text-sub);border-radius:20px;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;transition:all .15s;user-select:none;
+}
+.mine-btn:hover{border-color:#e05555;color:var(--text);}
+.mine-btn.active{background:#c0392b;border-color:#c0392b;color:#fff;}
+
+/* ── 직접입력 wrap ── */
+.etc-wrap{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.etc-wrap input{
+  flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:5px 10px;border-radius:20px;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  outline:none;transition:border-color .2s;
+}
+.etc-wrap input:focus{border-color:var(--accent);}
+.etc-add-btn{
+  padding:5px 12px;background:var(--accent);border:none;color:#fff;
+  border-radius:20px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;
+}
+
+/* ── 이미지 업로드 ── */
+.img-upload-area{
+  border:2px dashed var(--border);border-radius:10px;padding:16px;
+  text-align:center;cursor:pointer;transition:border-color .2s;background:var(--panel2);
+}
+.img-upload-area:hover{border-color:var(--accent);}
+.img-upload-area .icon{font-size:24px;margin-bottom:4px;}
+.img-upload-area p{font-size:12px;color:var(--text-sub);}
+.img-upload-area input{display:none;}
+.img-preview{max-width:100%;max-height:100px;border-radius:8px;margin-top:7px;}
+
+/* ── 색상 선택기 ── */
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.preset-dot{
+  width:24px;height:24px;border-radius:50%;border:3px solid transparent;
+  cursor:pointer;transition:transform .15s,border-color .15s;flex-shrink:0;
+}
+.preset-dot:hover{transform:scale(1.2);}
+.preset-dot.active{border-color:#fff;transform:scale(1.15);}
+
+.custom-color-box{
+  background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;display:flex;flex-direction:column;gap:10px;
+}
+.ccolor-row{display:flex;align-items:center;gap:10px;}
+.ccolor-row label{font-size:11px;color:var(--text-sub);width:80px;flex-shrink:0;}
+.cpick-wrap{display:flex;align-items:center;gap:7px;flex:1;}
+.cpick-wrap input[type="color"]{
+  width:34px;height:26px;border:1px solid var(--border);border-radius:5px;
+  background:none;cursor:pointer;padding:2px;flex-shrink:0;
+}
+.cpick-wrap input[type="text"]{
+  flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:4px 8px;border-radius:6px;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  outline:none;transition:border-color .2s;min-width:0;
+}
+.cpick-wrap input[type="text"]:focus{border-color:var(--accent);}
+
+/* ── 저장 버튼 ── */
+.save-btn{
+  width:100%;margin-top:20px;padding:13px;
+  background:linear-gradient(135deg,#2563c0,#5ea3f7);color:#fff;
+  font-size:14px;font-family:'Gmarket Sans',sans-serif;font-weight:700;
+  border:none;border-radius:10px;cursor:pointer;transition:opacity .2s,transform .1s;letter-spacing:1px;
+}
+.save-btn:hover{opacity:.9;}
+.save-btn:active{transform:scale(.98);}
+
+/* ── 미리보기 패널 ── */
+.preview-panel{
+  background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;padding:28px 20px;
+  overflow-y:auto;   /* 시트가 길어지면 스크롤 */
+  height:100%;       /* 부모 높이에 맞춤 */
+}
+.preview-label{font-size:10px;letter-spacing:2px;color:var(--text-sub);
+  text-transform:uppercase;margin-bottom:16px;font-family:'Gmarket Sans',sans-serif;}
+
+/* ══ 시트 카드 ══ */
+.sheet-card{
+  width:690px;border-radius:16px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:'Noto Sans KR',sans-serif;
+  flex-shrink:0;
+}
+
+/* 헤더 배너 */
+.sheet-banner{
+  width:100%;height:160px;position:relative;overflow:hidden;
+  display:flex;align-items:flex-end;
+}
+.sheet-banner-bg{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  background-repeat:no-repeat;
+}
+/* overlay: JS로 배경색 주입 — CSS gradient 없음 */
+.sheet-banner-overlay{ position:absolute;inset:0; }
+.sheet-banner-info{
+  position:relative;z-index:2;
+  display:flex;align-items:flex-end;gap:14px;
+  padding:0 20px 16px;width:100%;
+}
+.sheet-avatar{
+  width:70px;height:70px;border-radius:12px;
+  border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  flex-shrink:0;overflow:hidden;margin-bottom:-4px;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+}
+.sheet-avatar img{width:100%;height:100%;object-fit:cover;}
+.sheet-names{flex:1;}
+.sheet-nickname{
+  font-family:'Black Han Sans',sans-serif;font-size:22px;line-height:1.1;
+  color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.7);word-break:break-all;
+}
+/* 핸들 + 배지 한 줄 */
+.sheet-handle-row{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;
+}
+.sheet-handle{font-size:11px;color:rgba(255,255,255,.8);}
+.sheet-badge{
+  display:inline-flex;align-items:center;gap:2px;padding:2px 8px;border-radius:20px;
+  background:rgba(255,255,255,.12);font-size:10px;font-weight:700;color:#fff;
+  backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);
+}
+
+/* 본문 2컬럼 */
+.sheet-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.sheet-col{padding:16px 18px;}
+.sheet-col:first-child{border-right:1px solid rgba(255,255,255,.1);}
+.sheet-sec{margin-bottom:13px;}
+.sheet-sec:last-child{margin-bottom:0;}
+.sheet-sec-label{
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:6px;display:flex;align-items:center;gap:6px;
+}
+.sheet-sec-label::after{content:'';flex:1;height:1px;background:currentColor;opacity:.2;}
+.sheet-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.sheet-tag{padding:3px 9px;border-radius:5px;font-size:11px;
+  background:rgba(255,255,255,.13);color:rgba(255,255,255,.92);}
+.sheet-tag.red{background:rgba(180,40,40,.4)!important;color:#ffd0d0!important;}
+.sheet-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:10px 0;}
+.sheet-text{line-height:1.75;opacity:.88;white-space:pre-wrap;word-break:break-all;}
+.sheet-onemsg{
+  padding:8px 12px;opacity:.85;line-height:1.65;
+  white-space:pre-wrap;word-break:break-all;
+  border-left:3px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.05);border-radius:0 6px 6px 0;
+}
+.sheet-footer{
+  padding:9px 18px;display:flex;justify-content:space-between;align-items:center;
+  background:rgba(0,0,0,.25);font-size:10px;color:rgba(255,255,255,.5);
+}
+.sheet-full{padding:13px 18px 15px;border-top:1px solid rgba(255,255,255,.1);}
+
+@media(max-width:600px){
+  body{overflow:auto;}
+  .layout{grid-template-columns:1fr;height:auto;}
+  .input-panel{height:auto;overflow-y:visible;}
+  .preview-panel{height:auto;overflow-y:visible;}
+  .sheet-card{width:100%;max-width:460px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">울새버스 시트 생성기</div>
+    <div class="logo-sub">Ulse-Verse Sheet Generator</div>
+  </div>
+  <div class="hspacer"></div>
+  <button class="theme-toggle" onclick="document.body.classList.toggle('dark-theme')">🌙 다크 / 라이트</button>
+</header>
+
+<div class="layout">
+<!-- ═══ 입력 패널 ═══ -->
+<div class="input-panel">
+
+  <div class="sec-title">👤 기본 정보</div>
+
+  <div class="field">
+    <label>헤더 배너 이미지 (선택)</label>
+    <div class="img-upload-area" onclick="document.getElementById('bannerInput').click()">
+      <div class="icon">🌄</div>
+      <p>클릭하여 배너 이미지 업로드<br><span style="font-size:11px;opacity:.6">가로로 긴 이미지 권장 (16:5 비율)</span></p>
+      <input type="file" id="bannerInput" accept="image/*" onchange="loadBanner(event)">
+      <img id="bannerPreview" class="img-preview" style="display:none">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>프로필 이미지</label>
+    <div class="img-upload-area" onclick="document.getElementById('avatarInput').click()">
+      <div class="icon">🖼️</div>
+      <p>클릭하여 이미지 업로드<br><span style="font-size:11px;opacity:.6">PNG / JPG 권장</span></p>
+      <input type="file" id="avatarInput" accept="image/*" onchange="loadAvatar(event)">
+      <img id="avatarPreview" class="img-preview" style="display:none">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>닉네임 *</label>
+    <input type="text" id="nickname" placeholder="표시될 닉네임" oninput="updateSheet()">
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label>트위터 아이디</label>
+      <input type="text" id="handle" placeholder="@아이디" oninput="updateSheet()">
+    </div>
+    <div class="field">
+      <label>연령대</label>
+      <select id="age" onchange="updateSheet()">
+        <option value="">선택</option>
+        <option>성인</option>
+        <option>미성년자</option>
+        <option>비공개</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>FUB FREE</label>
+    <div class="fub-group">
+      <div class="fub-btn" id="fubO" onclick="setFub('O')">✅ O (FUB FREE)</div>
+      <div class="fub-btn" id="fubX" onclick="setFub('X')">❌ X (FUB FREE 아님)</div>
+    </div>
+  </div>
+
+  <div class="sec-title">🌐 울새버스</div>
+
+  <div class="field">
+    <label>활동 버스 (복수 선택)</label>
+    <div class="tag-group" id="tagBus">
+      <button class="tag-btn" onclick="toggleTag(this)">스타레인</button>
+      <button class="tag-btn" onclick="toggleTag(this)">헤이룽화</button>
+      <button class="tag-btn" onclick="toggleTag(this)">뉴에덴</button>
+      <button class="tag-btn" onclick="toggleTag(this)">미스트</button>
+      <button class="tag-btn" onclick="toggleTag(this)">메르헨파크</button>
+      <button class="tag-btn" onclick="toggleTag(this)">이그나리온</button>
+      <button class="tag-btn" onclick="toggleTag(this)">영월국</button>
+      <button class="tag-btn" onclick="toggleTag(this)">선연국</button>
+      <button class="tag-btn" onclick="toggleTag(this)">선셋</button>
+      <button class="tag-btn" onclick="toggleTag(this)">레오넬리아</button>
+      <button class="tag-btn" onclick="toggleTag(this)">도원</button>
+      <button class="tag-btn" onclick="toggleTag(this)">그 외</button>
+    </div>
+  </div>
+
+  <div class="sec-title">📝 계정 성향</div>
+
+  <div class="field">
+    <label>트윗 성향 (복수 선택)</label>
+    <div class="tag-group" id="tagTweet">
+      <button class="tag-btn" onclick="toggleTag(this)">그림</button>
+      <button class="tag-btn" onclick="toggleTag(this)">글</button>
+      <button class="tag-btn" onclick="toggleTag(this)">썰</button>
+      <button class="tag-btn" onclick="toggleTag(this)">지문</button>
+      <button class="tag-btn" onclick="toggleTag(this)">RT</button>
+      <button class="tag-btn" onclick="toggleTag(this)">탐라 대화</button>
+      <button class="tag-btn" onclick="toggleTag(this)">인용 대화</button>
+      <button class="tag-btn" onclick="toggleTag(this)">마음</button>
+      <button class="tag-btn" onclick="toggleTag(this)">일상</button>
+      <button class="tag-btn" onclick="toggleTag(this)">욕설</button>
+      <button class="tag-btn" onclick="toggleTag(this)">우울</button>
+      <button class="tag-btn" onclick="toggleTag(this)">폭력</button>
+      <button class="tag-btn" onclick="toggleTag(this)">고어</button>
+    </div>
+    <div class="etc-wrap">
+      <input type="text" id="tweetEtc" placeholder="기타 직접 입력" onkeydown="if(event.key==='Enter')addEtcTag('tagTweet','tweetEtc')">
+      <button class="etc-add-btn" onclick="addEtcTag('tagTweet','tweetEtc')">+ 추가</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>덕질 성향 (복수 선택)</label>
+    <div class="tag-group" id="tagDuck">
+      <button class="tag-btn" onclick="toggleTag(this)">논드림</button>
+      <button class="tag-btn" onclick="toggleTag(this)">드림</button>
+      <button class="tag-btn" onclick="toggleTag(this)">HL</button>
+      <button class="tag-btn" onclick="toggleTag(this)">BL</button>
+      <button class="tag-btn" onclick="toggleTag(this)">GL</button>
+      <button class="tag-btn" onclick="toggleTag(this)">NCP</button>
+      <button class="tag-btn" onclick="toggleTag(this)">온리드림</button>
+    </div>
+    <div class="etc-wrap">
+      <input type="text" id="duckEtc" placeholder="기타 직접 입력" onkeydown="if(event.key==='Enter')addEtcTag('tagDuck','duckEtc')">
+      <button class="etc-add-btn" onclick="addEtcTag('tagDuck','duckEtc')">+ 추가</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>SNS 성향 (복수 선택)</label>
+    <div class="tag-group" id="tagSns">
+      <button class="tag-btn" onclick="toggleTag(this)">리트윗 많음</button>
+      <button class="tag-btn" onclick="toggleTag(this)">잠수 잦음</button>
+      <button class="tag-btn" onclick="toggleTag(this)">반응 느림</button>
+      <button class="tag-btn" onclick="toggleTag(this)">타장르 언급</button>
+      <button class="tag-btn" onclick="toggleTag(this)">성인🔞</button>
+    </div>
+  </div>
+
+  <!-- ═══ 정실 ═══ -->
+  <div class="sec-title">💗 정실</div>
+
+  <div class="field">
+    <label>정실 (직접 추가)</label>
+    <div class="tag-group" id="tagLikes"></div>
+    <div class="etc-wrap">
+      <input type="text" id="likesEtc" placeholder="정실 직접 입력" onkeydown="if(event.key==='Enter')addEtcTag('tagLikes','likesEtc')">
+      <button class="etc-add-btn" onclick="addEtcTag('tagLikes','likesEtc')">+ 추가</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>정실 텍스트</label>
+    <textarea id="likes" oninput="updateSheet()"></textarea>
+  </div>
+
+  <!-- ═══ 지뢰 ═══ -->
+  <div class="sec-title">❌ 지뢰</div>
+
+  <div class="field">
+    <label>지뢰 텍스트</label>
+    <textarea id="dislikes" oninput="updateSheet()"></textarea>
+  </div>
+
+  <div class="field">
+    <label>지뢰 대응 (복수 선택)</label>
+    <div class="mine-group">
+      <button class="mine-btn" onclick="toggleMine(this)">🚫 블락</button>
+      <button class="mine-btn" onclick="toggleMine(this)">🔇 블언블</button>
+      <button class="mine-btn" onclick="toggleMine(this)">👋 언팔</button>
+    </div>
+  </div>
+
+  <!-- ═══ 기타 ═══ -->
+  <div class="sec-title">📌 기타</div>
+
+  <div class="field">
+    <textarea id="onemsg" placeholder="자유 입력" oninput="updateSheet()" style="min-height:88px;"></textarea>
+  </div>
+
+  <!-- ═══ 시트 폰트 ═══ -->
+  <div class="sec-title">🔤 시트 폰트</div>
+
+  <div class="field">
+    <label>본문 폰트</label>
+    <select id="fontBody" onchange="applyFont()">
+      <option value="'Noto Sans KR', sans-serif">Noto Sans KR (기본 산세리프)</option>
+      <option value="'Noto Serif KR', serif">Noto Serif KR (세리프)</option>
+      <option value="'Hahmlet', serif">Hahmlet (햄릿 세리프)</option>
+      <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
+      <option value="'Nanum Myeongjo', serif">나눔명조</option>
+      <option value="'Gaegu', cursive">개구 (손글씨)</option>
+      <option value="'Sunflower', sans-serif">해바라기체</option>
+      <option value="'Jua', sans-serif">주아체</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>닉네임 폰트</label>
+    <select id="fontNick" onchange="applyFont()">
+      <option value="'Black Han Sans', sans-serif">Black Han Sans (기본)</option>
+      <option value="'Do Hyeon', sans-serif">도현체</option>
+      <option value="'Jua', sans-serif">주아체</option>
+      <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+      <option value="'Noto Serif KR', serif">Noto Serif KR</option>
+      <option value="'Hahmlet', serif">Hahmlet</option>
+      <option value="'Nanum Myeongjo', serif">나눔명조</option>
+      <option value="'Gaegu', cursive">개구 (손글씨)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>닉네임 크기 <span id="nickSizeVal">22</span>px</label>
+    <input type="range" id="nickSize" min="14" max="40" value="22" oninput="document.getElementById('nickSizeVal').textContent=this.value;applyFont()">
+  </div>
+
+  <div class="field">
+    <label>본문 크기 <span id="bodySizeVal">12</span>px</label>
+    <input type="range" id="bodySize" min="9" max="18" value="12" oninput="document.getElementById('bodySizeVal').textContent=this.value;applyFont()">
+  </div>
+
+  <div class="field">
+    <label>본문 굵기</label>
+    <select id="bodyWeight" onchange="applyFont()">
+      <option value="300">Light (300)</option>
+      <option value="400" selected>Regular (400)</option>
+      <option value="500">Medium (500)</option>
+      <option value="700">Bold (700)</option>
+      <option value="900">Black (900)</option>
+    </select>
+  </div>
+
+  <!-- ═══ 시트 테마 ═══ -->
+  <div class="sec-title">🎨 시트 테마</div>
+
+  <div class="field">
+    <label>프리셋 테마</label>
+    <div class="preset-row" id="presetRow">
+      <div class="preset-dot active" style="background:linear-gradient(135deg,#1040a0,#5ea3f7)" onclick="applyPreset('blue',this)" title="블루"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#0a0e28,#3050a8)" onclick="applyPreset('navy',this)" title="네이비"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#083a3a,#1aa8a8)" onclick="applyPreset('teal',this)" title="틸"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#555,#bbb)" onclick="applyPreset('silver',this)" title="실버"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#2a2a2a,#888)" onclick="applyPreset('mono',this)" title="모노"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#000,#222)" onclick="applyPreset('black',this)" title="블랙"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#6b21a8,#a855f7)" onclick="applyPreset('purple',this)" title="퍼플"></div>
+      <div class="preset-dot" style="background:linear-gradient(135deg,#9d174d,#f43f5e)" onclick="applyPreset('rose',this)" title="로즈"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>직접 색상 설정 (컬러 피커 또는 HEX 코드 입력)</label>
+    <div class="custom-color-box">
+
+      <div class="ccolor-row">
+        <label>헤더 시작색</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpHF" value="#1040a0"
+            oninput="syncHex('cpHF','hxHF');applyCustom()">
+          <input type="text" id="hxHF" value="#1040a0" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxHF','cpHF');applyCustom()">
+        </div>
+      </div>
+
+      <div class="ccolor-row">
+        <label>헤더 끝색</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpHT" value="#5ea3f7"
+            oninput="syncHex('cpHT','hxHT');applyCustom()">
+          <input type="text" id="hxHT" value="#5ea3f7" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxHT','cpHT');applyCustom()">
+        </div>
+      </div>
+
+      <div class="ccolor-row">
+        <label>본문 배경</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpBG" value="#0a1628"
+            oninput="syncHex('cpBG','hxBG');applyCustom()">
+          <input type="text" id="hxBG" value="#0a1628" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxBG','cpBG');applyCustom()">
+        </div>
+      </div>
+
+      <div class="ccolor-row">
+        <label>본문 글자색</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpBT" value="#d8eaff"
+            oninput="syncHex('cpBT','hxBT');applyCustom()">
+          <input type="text" id="hxBT" value="#d8eaff" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxBT','cpBT');applyCustom()">
+        </div>
+      </div>
+
+      <div class="ccolor-row">
+        <label>란 제목 색상</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpSL" value="#7ab4f7"
+            oninput="syncHex('cpSL','hxSL');applyCustom()">
+          <input type="text" id="hxSL" value="#7ab4f7" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxSL','cpSL');applyCustom()">
+        </div>
+      </div>
+
+      <div class="ccolor-row">
+        <label>태그 배경</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpTG" value="#1a3060"
+            oninput="syncHex('cpTG','hxTG');applyCustom()">
+          <input type="text" id="hxTG" value="#1a3060" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxTG','cpTG');applyCustom()">
+        </div>
+      </div>
+
+      <div class="ccolor-row">
+        <label>태그 글자색</label>
+        <div class="cpick-wrap">
+          <input type="color" id="cpTT" value="#d8eaff"
+            oninput="syncHex('cpTT','hxTT');applyCustom()">
+          <input type="text" id="hxTT" value="#d8eaff" maxlength="7" placeholder="#000000"
+            oninput="syncPicker('hxTT','cpTT');applyCustom()">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveImage()">📷 이미지로 저장하기</button>
+
+</div><!-- /input-panel -->
+
+<!-- ═══ 미리보기 패널 ═══ -->
+<div class="preview-panel">
+  <div class="preview-label">PREVIEW — 실시간 미리보기</div>
+
+  <div class="sheet-card" id="sheetCard">
+
+    <!-- 배너 헤더 -->
+    <div class="sheet-banner" id="sheetBanner">
+      <div class="sheet-banner-bg" id="sheetBannerBg"></div>
+      <div class="sheet-banner-overlay" id="sheetBannerOverlay"></div>
+      <div class="sheet-banner-info">
+        <div class="sheet-avatar" id="sheetAvatar">🐦</div>
+        <div class="sheet-names">
+          <div class="sheet-nickname" id="sheetNickname">닉네임</div>
+          <div class="sheet-handle-row">
+            <span class="sheet-handle" id="sheetHandle"></span>
+            <div id="sheetBadges" style="display:contents;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 본문 2컬럼 -->
+    <div class="sheet-body" id="sheetBody">
+
+      <!-- 왼쪽 컬럼: 울새버스 + 계정성향 -->
+      <div class="sheet-col" id="sheetColLeft">
+
+        <div class="sheet-sec" id="secBus" style="display:none">
+          <div class="sheet-sec-label">ULSE-VERSE</div>
+          <div class="sheet-tags" id="sheetBusTags"></div>
+        </div>
+
+        <hr class="sheet-divider" id="dividerBusTweet" style="display:none">
+
+        <div class="sheet-sec" id="secTweet" style="display:none">
+          <div class="sheet-sec-label">TWEET STYLE</div>
+          <div class="sheet-tags" id="sheetTweetTags"></div>
+        </div>
+
+        <div class="sheet-sec" id="secDuck" style="display:none">
+          <div class="sheet-sec-label">STAN STYLE</div>
+          <div class="sheet-tags" id="sheetDuckTags"></div>
+        </div>
+
+        <div class="sheet-sec" id="secSns" style="display:none">
+          <div class="sheet-sec-label">SNS STYLE</div>
+          <div class="sheet-tags" id="sheetSnsTags"></div>
+        </div>
+
+      </div>
+
+      <!-- 오른쪽 컬럼: 정실 + 지뢰 -->
+      <div class="sheet-col" id="sheetColRight">
+
+        <div class="sheet-sec" id="secLikes" style="display:none">
+          <div class="sheet-sec-label">💗 정실</div>
+          <div class="sheet-tags" id="sheetLikesTags" style="margin-bottom:6px;"></div>
+          <div class="sheet-text" id="sheetLikesText"></div>
+        </div>
+
+        <hr class="sheet-divider" id="divider2" style="display:none">
+
+        <div class="sheet-sec" id="secDislikes" style="display:none">
+          <div class="sheet-sec-label">❌ 지뢰</div>
+          <div class="sheet-text" id="sheetDislikesText"></div>
+          <div class="sheet-tags" id="sheetMineTags" style="margin-top:6px;"></div>
+        </div>
+
+      </div>
+
+    </div><!-- /sheet-body -->
+
+    <!-- 기타: 풀너비 -->
+    <div class="sheet-full" id="secOnemsgWrap" style="display:none">
+      <div class="sheet-sec" id="secOnemsg">
+        <div class="sheet-sec-label">NOTE</div>
+        <div class="sheet-onemsg" id="sheetOnemsg"></div>
+      </div>
+    </div>
+
+    <div class="sheet-footer" id="sheetFooter">
+      <span>울새버스 시트 생성기</span>
+      <span>@kxxlem_all</span>
+    </div>
+
+  </div><!-- /sheet-card -->
+</div><!-- /preview-panel -->
+</div><!-- /layout -->
+
+<script>
+let avatarDataURL = null;
+let bannerDataURL = null;
+let fubState = null;
+
+/* 현재 색상 상태 */
+let cc = {
+  hf:'#1040a0', ht:'#5ea3f7',
+  bg:'#0a1628', bt:'#d8eaff',
+  tg:'#1a3060', tt:'#d8eaff',
+  sl:'#7ab4f7'
+};
+
+/* 프리셋 */
+const PRESETS = {
+  blue:  {hf:'#1040a0',ht:'#5ea3f7',bg:'#0a1628',bt:'#d8eaff',tg:'#1a3060',tt:'#d8eaff',sl:'#7ab4f7'},
+  navy:  {hf:'#0a0e28',ht:'#3050a8',bg:'#080c1e',bt:'#c8d8f8',tg:'#101840',tt:'#c8d8f8',sl:'#6888d8'},
+  teal:  {hf:'#083a3a',ht:'#1aa8a8',bg:'#061818',bt:'#c8f0f0',tg:'#0a2828',tt:'#c8f0f0',sl:'#5ababa'},
+  silver:{hf:'#555555',ht:'#bbbbbb',bg:'#1c1c1c',bt:'#e4e4e4',tg:'#303030',tt:'#e4e4e4',sl:'#bbbbbb'},
+  mono:  {hf:'#2a2a2a',ht:'#888888',bg:'#1a1a1a',bt:'#e8e8e8',tg:'#2e2e2e',tt:'#e8e8e8',sl:'#999999'},
+  black: {hf:'#000000',ht:'#222222',bg:'#0a0a0a',bt:'#dddddd',tg:'#181818',tt:'#dddddd',sl:'#888888'},
+  purple:{hf:'#6b21a8',ht:'#a855f7',bg:'#160920',bt:'#ead8ff',tg:'#2a1040',tt:'#ead8ff',sl:'#c084fc'},
+  rose:  {hf:'#9d174d',ht:'#f43f5e',bg:'#200810',bt:'#ffd8e0',tg:'#381020',tt:'#ffd8e0',sl:'#f87171'},
+};
+
+/* ── hex→rgba ── */
+function rgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+/* ── 색상 동기화 ── */
+function syncHex(pId,hId){ document.getElementById(hId).value=document.getElementById(pId).value; }
+function syncPicker(hId,pId){
+  const v=document.getElementById(hId).value.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById(pId).value=v;
+}
+
+/* ── 프리셋 적용 ── */
+function applyPreset(name,dot){
+  document.querySelectorAll('.preset-dot').forEach(d=>d.classList.remove('active'));
+  dot.classList.add('active');
+  cc={...PRESETS[name]};
+  const map={hf:'HF',ht:'HT',bg:'BG',bt:'BT',tg:'TG',tt:'TT',sl:'SL'};
+  for(const[k,s] of Object.entries(map)){
+    document.getElementById('cp'+s).value=cc[k];
+    document.getElementById('hx'+s).value=cc[k];
+  }
+  applyCustom();
+}
+
+/* ── 커스텀 색상 적용 ── */
+function applyCustom(){
+  const map={hf:'HF',ht:'HT',bg:'BG',bt:'BT',tg:'TG',tt:'TT',sl:'SL'};
+  for(const[k,s] of Object.entries(map)){
+    cc[k]=document.getElementById('cp'+s).value;
+  }
+
+  /* 배너 배경: 이미지 없으면 그라데이션 */
+  const bannerBg = document.getElementById('sheetBannerBg');
+  if(!bannerDataURL){
+    bannerBg.style.backgroundImage='none';
+    bannerBg.style.background=`linear-gradient(135deg,${cc.hf},${cc.ht})`;
+  }
+  /* overlay: 헤더 끝색 기반 하단 어둠 */
+  document.getElementById('sheetBannerOverlay').style.background=
+    `linear-gradient(to bottom, ${rgba(cc.hf,0)} 0%, ${rgba(cc.hf,0.6)} 100%)`;
+
+  /* 본문 컬럼들 */
+  ['sheetBody','sheetColLeft','sheetColRight'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.style.background=cc.bg; el.style.color=cc.bt; }
+  });
+
+  /* 풀너비 기타 */
+  const full=document.getElementById('secOnemsgWrap');
+  if(full){ full.style.background=cc.bg; full.style.color=cc.bt; }
+
+  /* 푸터 */
+  const foot=document.getElementById('sheetFooter');
+  foot.style.background=rgba(cc.bg,0.85);
+  foot.style.color=rgba(cc.bt,0.6);
+
+  /* 일반 태그 */
+  document.querySelectorAll('#sheetCard .sheet-tag:not(.red)').forEach(t=>{
+    t.style.background=rgba(cc.tg,0.9);
+    t.style.color=cc.tt;
+  });
+
+  /* sec-label */
+  document.querySelectorAll('#sheetCard .sheet-sec-label').forEach(l=>{
+    l.style.color=cc.sl;
+  });
+
+  /* divider */
+  document.querySelectorAll('#sheetCard .sheet-divider, #sheetCard .sheet-full').forEach(d=>{
+    d.style.borderTopColor=rgba(cc.sl,0.25);
+    d.style.borderColor=rgba(cc.sl,0.15);
+  });
+  /* 컬럼 사이 구분선 */
+  const leftCol=document.getElementById('sheetColLeft');
+  if(leftCol) leftCol.style.borderRightColor=rgba(cc.sl,0.2);
+
+  /* onemsg */
+  const om=document.getElementById('sheetOnemsg');
+  if(om) om.style.borderLeftColor=rgba(cc.ht,0.7);
+}
+
+/* ── 태그 렌더 헬퍼 ── */
+function getTagLabel(btn){
+  // × span 제외하고 텍스트만 추출
+  return Array.from(btn.childNodes)
+    .filter(n=>n.nodeType===3)
+    .map(n=>n.textContent.trim())
+    .join('');
+}
+
+function renderTags(groupId,secId,tagsId,red){
+  const btns=document.querySelectorAll('#'+groupId+' .tag-btn.active');
+  const sec=document.getElementById(secId);
+  const cont=document.getElementById(tagsId);
+  if(!btns.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  cont.innerHTML='';
+  btns.forEach(b=>{
+    const t=document.createElement('div');
+    t.className='sheet-tag'+(red?' red':'');
+    if(!red){t.style.background=rgba(cc.tg,0.9);t.style.color=cc.tt;}
+    t.textContent=getTagLabel(b);
+    cont.appendChild(t);
+  });
+}
+
+/* ── 배너 로드 ── */
+function loadBanner(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    bannerDataURL=ev.target.result;
+    document.getElementById('bannerPreview').src=bannerDataURL;
+    document.getElementById('bannerPreview').style.display='block';
+    const bg=document.getElementById('sheetBannerBg');
+    bg.style.background='none';
+    bg.style.backgroundImage=`url('${bannerDataURL}')`;
+    bg.style.backgroundSize='cover';
+    bg.style.backgroundPosition='center';
+    /* overlay는 색상 기반 유지 */
+    applyCustom();
+  };
+  r.readAsDataURL(file);
+}
+
+/* ── 아바타 로드 ── */
+function loadAvatar(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    avatarDataURL=ev.target.result;
+    document.getElementById('avatarPreview').src=avatarDataURL;
+    document.getElementById('avatarPreview').style.display='block';
+    updateSheet();
+  };
+  r.readAsDataURL(file);
+}
+
+/* ── FUB FREE ── */
+function setFub(val){
+  fubState=(fubState===val)?null:val;
+  document.getElementById('fubO').classList.toggle('active',fubState==='O');
+  document.getElementById('fubX').classList.toggle('active',fubState==='X');
+  updateSheet();
+}
+
+/* ── 태그 토글 ── */
+function toggleTag(btn){btn.classList.toggle('active');updateSheet();}
+function toggleMine(btn){btn.classList.toggle('active');updateSheet();}
+
+/* ── 기타 태그 추가 ── */
+function addEtcTag(groupId,inputId){
+  const inp=document.getElementById(inputId);
+  const val=inp.value.trim();if(!val)return;
+  const btn=document.createElement('button');
+  btn.className='tag-btn active';
+  btn.innerHTML=`${val} <span style="margin-left:4px;opacity:.7;font-size:11px;" onclick="event.stopPropagation();this.parentElement.remove();updateSheet();">×</span>`;
+  btn.onclick=function(){toggleTag(this);};
+  document.getElementById(groupId).appendChild(btn);
+  inp.value='';updateSheet();
+}
+
+/* ── 메인 업데이트 ── */
+function updateSheet(){
+  const nn=document.getElementById('nickname').value.trim()||'닉네임';
+  const handle=document.getElementById('handle').value.trim();
+  const age=document.getElementById('age').value;
+  const likes=document.getElementById('likes').value.trim();
+  const dislikes=document.getElementById('dislikes').value.trim();
+  const onemsg=document.getElementById('onemsg').value.trim();
+
+  document.getElementById('sheetNickname').textContent=nn;
+  document.getElementById('sheetHandle').textContent=
+    handle?(handle.startsWith('@')?handle:'@'+handle):'';
+
+  /* 배지 */
+  const badgesEl=document.getElementById('sheetBadges');
+  badgesEl.innerHTML='';
+  if(age){
+    const b=document.createElement('div');b.className='sheet-badge';
+    b.textContent=age==='성인'?'성인':age==='미성년자'?'미성년자':'비공개';
+    badgesEl.appendChild(b);
+  }
+  if(fubState){
+    const b=document.createElement('div');b.className='sheet-badge';
+    b.textContent=fubState==='O'?'FUB FREE O':'FUB FREE X';
+    badgesEl.appendChild(b);
+  }
+
+  /* 아바타 */
+  document.getElementById('sheetAvatar').innerHTML=
+    avatarDataURL?`<img src="${avatarDataURL}">`:'🐦';
+
+  /* 성향 태그 */
+  renderTags('tagBus','secBus','sheetBusTags');
+  renderTags('tagTweet','secTweet','sheetTweetTags');
+  renderTags('tagDuck','secDuck','sheetDuckTags');
+  renderTags('tagSns','secSns','sheetSnsTags');
+
+  /* 울새버스 ↔ 계정성향 HR */
+  const hasBus=document.getElementById('secBus').style.display!=='none';
+  const hasTweetDuckSns=['secTweet','secDuck','secSns']
+    .some(id=>document.getElementById(id).style.display!=='none');
+  document.getElementById('dividerBusTweet').style.display=
+    (hasBus&&hasTweetDuckSns)?'block':'none';
+
+  /* 정실 태그 */
+  const likesBtns=document.querySelectorAll('#tagLikes .tag-btn.active');
+  const likesCont=document.getElementById('sheetLikesTags');
+  likesCont.innerHTML='';
+  likesBtns.forEach(b=>{
+    const t=document.createElement('div');
+    t.className='sheet-tag';
+    t.style.background=rgba(cc.tg,0.9);t.style.color=cc.tt;
+    t.textContent=getTagLabel(b);likesCont.appendChild(t);
+  });
+  document.getElementById('sheetLikesText').textContent=likes;
+  const secLikes=document.getElementById('secLikes');
+  secLikes.style.display=(likesBtns.length||likes)?'block':'none';
+
+  /* 지뢰 */
+  document.getElementById('sheetDislikesText').textContent=dislikes;
+  const mineBtns=document.querySelectorAll('.mine-btn.active');
+  const mineCont=document.getElementById('sheetMineTags');
+  mineCont.innerHTML='';
+  mineBtns.forEach(b=>{
+    const t=document.createElement('div');t.className='sheet-tag red';
+    t.textContent=b.textContent;mineCont.appendChild(t);
+  });
+  const secDis=document.getElementById('secDislikes');
+  secDis.style.display=(dislikes||mineBtns.length)?'block':'none';
+
+  /* 정실↔지뢰 구분선 */
+  document.getElementById('divider2').style.display=
+    (secLikes.style.display!=='none'&&secDis.style.display!=='none')?'block':'none';
+
+  /* 기타 (풀너비) */
+  const wrap=document.getElementById('secOnemsgWrap');
+  if(onemsg){
+    wrap.style.display='block';
+    document.getElementById('sheetOnemsg').textContent=onemsg;
+  } else wrap.style.display='none';
+
+  applyCustom();
+  applyFont();
+}
+
+/* ── 폰트 적용 ── */
+function applyFont(){
+  const bodyFont=document.getElementById('fontBody').value;
+  const nickFont=document.getElementById('fontNick').value;
+  const nickSize=document.getElementById('nickSize').value;
+  const bodySize=document.getElementById('bodySize').value;
+  const bodyWeight=document.getElementById('bodyWeight').value;
+
+  /* 닉네임 */
+  const nn=document.getElementById('sheetNickname');
+  nn.style.fontFamily=nickFont;
+  nn.style.fontSize=nickSize+'px';
+
+  /* 본문 컬럼 + 기타 + 푸터: 폰트패밀리만 */
+  ['sheetColLeft','sheetColRight','secOnemsgWrap','sheetFooter'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.fontFamily=bodyFont;
+  });
+
+  /* 본문 크기·굵기: 시트 내 텍스트 요소 전체에 직접 주입 */
+  document.querySelectorAll(
+    '#sheetCard .sheet-text, #sheetCard .sheet-onemsg, #sheetCard .sheet-tag, #sheetCard .sheet-sec-label, #sheetCard .sheet-footer'
+  ).forEach(el=>{
+    el.style.fontSize=bodySize+'px';
+    el.style.fontWeight=bodyWeight;
+  });
+}
+
+/* ── 이미지 저장 ── */
+function saveImage(){
+  html2canvas(document.getElementById('sheetCard'),
+    {scale:2,useCORS:true,backgroundColor:null,logging:false})
+  .then(canvas=>{
+    const a=document.createElement('a');
+    a.download='ulsebus_sheet.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+  });
+}
+
+/* 초기화 */
+applyPreset('blue',document.querySelector('.preset-dot.active'));
+applyFont();
+updateSheet();
+</script>
+</body>
+</html>
