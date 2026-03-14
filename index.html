@@ -164,15 +164,16 @@ header{
 .preview-panel{
   background:var(--bg);display:flex;flex-direction:column;
   align-items:center;padding:28px 20px;
-  overflow-y:auto;   /* 시트가 길어지면 스크롤 */
-  height:100%;       /* 부모 높이에 맞춤 */
+  overflow-y:auto;
+  height:100%;
+  min-width:0; /* grid 자식이 줄어들 수 있도록 */
 }
 .preview-label{font-size:10px;letter-spacing:2px;color:var(--text-sub);
   text-transform:uppercase;margin-bottom:16px;font-family:'Gmarket Sans',sans-serif;}
 
 /* ══ 시트 카드 ══ */
 .sheet-card{
-  width:690px;border-radius:16px;overflow:hidden;
+  width:100%;max-width:690px;border-radius:16px;overflow:hidden;
   box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:'Noto Sans KR',sans-serif;
   flex-shrink:0;
 }
@@ -250,8 +251,8 @@ header{
   body{overflow:auto;}
   .layout{grid-template-columns:1fr;height:auto;}
   .input-panel{height:auto;overflow-y:visible;}
-  .preview-panel{height:auto;overflow-y:visible;}
-  .sheet-card{width:100%;max-width:460px;}
+  .preview-panel{height:auto;overflow-y:visible;width:100%;padding:20px 12px;}
+  .sheet-card{max-width:100%;}
 }
 </style>
 </head>
@@ -587,7 +588,12 @@ header{
 
 <!-- ═══ 미리보기 패널 ═══ -->
 <div class="preview-panel">
-  <div class="preview-label">PREVIEW — 실시간 미리보기</div>
+  <div style="margin-bottom:16px;text-align:center;">
+    <div class="preview-label" style="margin-bottom:5px;">PREVIEW — 실시간 미리보기</div>
+    <div id="sizeLabel" style="font-size:10px;color:var(--text-sub);font-family:'Gmarket Sans',sans-serif;letter-spacing:.5px;">
+      이미지 픽셀 사이즈: <span style="color:var(--accent2);font-weight:700;">1380 × <span id="sheetHeightPx">—</span> px</span>
+    </div>
+  </div>
 
   <div class="sheet-card" id="sheetCard">
 
@@ -949,6 +955,14 @@ function updateSheet(){
 
   applyCustom();
   applyFont();
+  updateSizeLabel();
+}
+
+/* ── 저장 사이즈 표시 ── */
+function updateSizeLabel(){
+  const card=document.getElementById('sheetCard');
+  const h=Math.round(card.offsetHeight*2);
+  document.getElementById('sheetHeightPx').textContent=h;
 }
 
 /* ── 폰트 적용 ── */
