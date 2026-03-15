@@ -1043,20 +1043,10 @@ function saveImage(){
   card.style.width='690px';
   card.style.maxWidth='690px';
 
-  const scale=2;
-  const w=690*scale;
-  const h=card.offsetHeight*scale;
-
   document.fonts.ready.then(()=>{
     domtoimage.toPng(card,{
-      width:w,
-      height:h,
-      style:{
-        transform:`scale(${scale})`,
-        transformOrigin:'top left',
-        width:'690px',
-        height:card.offsetHeight+'px'
-      }
+      quality:1,
+      bgcolor:null
     }).then(dataUrl=>{
       card.style.width=origWidth;
       card.style.maxWidth=origMaxWidth;
