@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Gmarket+Sans:wght@300;500;700&family=Black+Han+Sans&family=Hahmlet:wght@300;400;500;700&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Do+Hyeon&family=Jua&family=Gaegu:wght@300;400;700&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
 <style>
 :root{
   --bg:#eef2f8;--panel:#fff;--panel2:#f4f7fc;
@@ -230,7 +231,12 @@ header{
 }
 .sheet-sec-label::after{content:'';flex:1;height:1px;background:currentColor;opacity:.2;}
 .sheet-tags{display:flex;flex-wrap:wrap;gap:4px;}
-.sheet-tag{padding:3px 9px;border-radius:5px;font-size:11px;
+.sheet-tag{
+  padding:5px 9px 2px 9px;
+  border-radius:5px;font-size:11px;
+  display:inline-block;
+  vertical-align:middle;
+  line-height:1;
   background:rgba(255,255,255,.13);color:rgba(255,255,255,.92);}
 .sheet-tag.red{background:rgba(180,40,40,.4)!important;color:#ffd0d0!important;}
 .sheet-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:10px 0;}
@@ -960,8 +966,10 @@ function updateSheet(){
   const mineCont=document.getElementById('sheetMineTags');
   mineCont.innerHTML='';
   mineBtns.forEach(b=>{
-    const t=document.createElement('div');t.className='sheet-tag red';
-    t.textContent=b.textContent;mineCont.appendChild(t);
+    const t=document.createElement('div');
+    t.className='sheet-tag red';
+    t.textContent=b.textContent;
+    mineCont.appendChild(t);
   });
   const secDis=document.getElementById('secDislikes');
   secDis.style.display=(dislikes||mineBtns.length)?'block':'none';
@@ -1008,12 +1016,20 @@ function applyFont(){
     if(el) el.style.fontFamily=bodyFont;
   });
 
-  /* 본문 크기·굵기: 시트 내 텍스트 요소 전체에 직접 주입 */
+  /* 본문 크기·굵기: sheet-tag 제외하고 먼저 적용 */
   document.querySelectorAll(
-    '#sheetCard .sheet-text, #sheetCard .sheet-onemsg, #sheetCard .sheet-tag, #sheetCard .sheet-sec-label, #sheetCard .sheet-footer'
+    '#sheetCard .sheet-text, #sheetCard .sheet-onemsg, #sheetCard .sheet-sec-label, #sheetCard .sheet-footer'
   ).forEach(el=>{
     el.style.fontSize=bodySize+'px';
     el.style.fontWeight=bodyWeight;
+  });
+
+  /* sheet-tag: 크기·굵기 적용 */
+  document.querySelectorAll('#sheetCard .sheet-tag').forEach(el=>{
+    el.style.fontSize=bodySize+'px';
+    el.style.fontWeight=bodyWeight;
+    el.style.lineHeight='1.4';
+    el.style.padding='4px 9px 3px 9px';
   });
   updateSizeLabel();
 }
@@ -1024,22 +1040,34 @@ function saveImage(){
   const origWidth=card.style.width;
   const origMaxWidth=card.style.maxWidth;
 
-  // 저장 시 강제로 690px 고정
   card.style.width='690px';
   card.style.maxWidth='690px';
 
-  html2canvas(card,{scale:2,useCORS:true,backgroundColor:null,logging:false})
-  .then(canvas=>{
-    // 원래 사이즈 복원
-    card.style.width=origWidth;
-    card.style.maxWidth=origMaxWidth;
-    const a=document.createElement('a');
-    a.download='robinverse_sheet.png';
-    a.href=canvas.toDataURL('image/png');
-    a.click();
-  }).catch(()=>{
-    card.style.width=origWidth;
-    card.style.maxWidth=origMaxWidth;
+  const scale=2;
+  const w=690*scale;
+  const h=card.offsetHeight*scale;
+
+  document.fonts.ready.then(()=>{
+    domtoimage.toPng(card,{
+      width:w,
+      height:h,
+      style:{
+        transform:`scale(${scale})`,
+        transformOrigin:'top left',
+        width:'690px',
+        height:card.offsetHeight+'px'
+      }
+    }).then(dataUrl=>{
+      card.style.width=origWidth;
+      card.style.maxWidth=origMaxWidth;
+      const a=document.createElement('a');
+      a.download='robinbus_sheet.png';
+      a.href=dataUrl;
+      a.click();
+    }).catch(()=>{
+      card.style.width=origWidth;
+      card.style.maxWidth=origMaxWidth;
+    });
   });
 }
 
