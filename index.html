@@ -235,7 +235,7 @@ header{
 .sheet-sec-label::after{content:'';flex:1;height:1px;background:currentColor;opacity:.2;}
 .sheet-tags{display:flex;flex-wrap:wrap;gap:4px;}
 .sheet-tag{
-  padding:5px 9px 3px 9px;
+  padding:3px 9px 5px 9px;
   border-radius:5px;font-size:11px;
   display:inline-block;
   line-height:normal;
@@ -1032,13 +1032,15 @@ function applyFont(){
   ).forEach(el=>{
     el.style.fontSize=bodySize+'px';
     el.style.fontWeight=bodyWeight;
+    if(el.classList.contains('sheet-text')) el.style.lineHeight='1.75';
+    if(el.classList.contains('sheet-onemsg')) el.style.lineHeight='1.65';
   });
 
   /* sheet-tag: 크기·굵기 적용 */
   document.querySelectorAll('#sheetCard .sheet-tag').forEach(el=>{
     el.style.fontSize=bodySize+'px';
     el.style.fontWeight=bodyWeight;
-    el.style.padding='5px 9px 3px 9px';
+    el.style.padding='3px 9px 5px 9px';
     el.style.lineHeight='normal';
   });
   updateSizeLabel();
@@ -1141,10 +1143,13 @@ function saveImage(){
           .sheet-tag { white-space:nowrap !important; overflow:hidden !important;
             font-family: ${bodyFont} !important;
             font-size:${bodySize} !important; font-weight:${bodyWeight} !important;
-            padding:5px 9px 4px 9px !important; display:inline-block !important; }
+            padding:3px 9px 5px 9px !important; display:inline-block !important;
+            line-height:1 !important; vertical-align:middle !important; }
           .sheet-text, .sheet-onemsg, .sheet-sec-label, .sheet-handle, .sheet-badge {
             font-family: ${bodyFont} !important;
             font-size:${bodySize} !important; font-weight:${bodyWeight} !important; }
+          .sheet-text { line-height:1.75 !important; }
+          .sheet-onemsg { line-height:1.65 !important; }
         `;
         clonedDoc.head.appendChild(style);
 
