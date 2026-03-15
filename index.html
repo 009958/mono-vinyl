@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Gmarket+Sans:wght@300;500;700&family=Black+Han+Sans&family=Hahmlet:wght@300;400;500;700&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Do+Hyeon&family=Jua&family=Gaegu:wght@300;400;700&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
 <style>
 :root{
   --bg:#eef2f8;--panel:#fff;--panel2:#f4f7fc;
@@ -195,12 +194,15 @@ header{
   display:flex;align-items:flex-end;gap:14px;
   padding:0 20px 16px;width:100%;
 }
+.sheet-avatar-wrap{
+  flex-shrink:0;margin-bottom:-4px;
+  border-radius:12px;
+}
 .sheet-avatar{
   width:70px;height:70px;border-radius:12px;
   border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);
   display:flex;align-items:center;justify-content:center;font-size:26px;
-  flex-shrink:0;overflow:hidden;margin-bottom:-4px;
-  box-shadow:0 4px 14px rgba(0,0,0,.45);
+  overflow:hidden;
 }
 .sheet-avatar img{width:100%;height:100%;object-fit:cover;object-position:center;}
 .sheet-names{flex:1;}
@@ -232,11 +234,9 @@ header{
 .sheet-sec-label::after{content:'';flex:1;height:1px;background:currentColor;opacity:.2;}
 .sheet-tags{display:flex;flex-wrap:wrap;gap:4px;}
 .sheet-tag{
-  padding:4px 9px;
+  padding:5px 9px 4px 9px;
   border-radius:5px;font-size:11px;
   display:inline-block;
-  vertical-align:middle;
-  line-height:1;
   background:rgba(255,255,255,.13);color:rgba(255,255,255,.92);}
 .sheet-tag.red{background:rgba(180,40,40,.4)!important;color:#ffd0d0!important;}
 .sheet-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:10px 0;}
@@ -611,7 +611,9 @@ header{
       <div class="sheet-banner-bg" id="sheetBannerBg"></div>
       <div class="sheet-banner-overlay" id="sheetBannerOverlay"></div>
       <div class="sheet-banner-info">
-        <div class="sheet-avatar" id="sheetAvatar">🐦</div>
+        <div class="sheet-avatar-wrap" id="sheetAvatarWrap">
+          <div class="sheet-avatar" id="sheetAvatar">🐦</div>
+        </div>
         <div class="sheet-names">
           <div class="sheet-nickname" id="sheetNickname">닉네임</div>
           <div class="sheet-handle-row">
@@ -1039,38 +1041,99 @@ function saveImage(){
   const card=document.getElementById('sheetCard');
   const origWidth=card.style.width;
   const origMaxWidth=card.style.maxWidth;
+  const origShadow=card.style.boxShadow;
 
+  // 690px 고정
   card.style.width='690px';
   card.style.maxWidth='690px';
+  card.style.boxShadow='none';
 
-  const scale=2;
+  // 폰트 값 읽기
+  const bodyFont=document.getElementById('fontBody').value;
+  const nickFont=document.getElementById('fontNick').value;
+  const nickSize=document.getElementById('nickSize').value+'px';
+  const bodySize=document.getElementById('bodySize').value+'px';
+  const bodyWeight=document.getElementById('bodyWeight').value;
+
+  // 태그 width 고정 (줄바꿈 방지)
+  const tags=card.querySelectorAll('.sheet-tag');
+  tags.forEach(t=>{
+    const w=t.offsetWidth;
+    t.style.width=w+'px';
+    t.style.whiteSpace='nowrap';
+    t.style.overflow='hidden';
+  });
+
+  // 폰트 인라인 명시
+  const allEls=card.querySelectorAll('*');
+  const origStyles=[];
+  allEls.forEach(el=>{
+    origStyles.push({ff:el.style.fontFamily,fs:el.style.fontSize,fw:el.style.fontWeight});
+    if(el.id==='sheetNickname'){
+      el.style.fontFamily=nickFont;
+      el.style.fontSize=nickSize;
+    } else if(
+      el.classList.contains('sheet-text')||
+      el.classList.contains('sheet-onemsg')||
+      el.classList.contains('sheet-tag')||
+      el.classList.contains('sheet-sec-label')||
+      el.classList.contains('sheet-handle')||
+      el.classList.contains('sheet-badge')||
+      el.classList.contains('sheet-footer')
+    ){
+      el.style.fontFamily=bodyFont;
+      el.style.fontSize=bodySize;
+      el.style.fontWeight=bodyWeight;
+    } else {
+      el.style.fontFamily=bodyFont;
+    }
+  });
+
+  const restore=()=>{
+    card.style.width=origWidth;
+    card.style.maxWidth=origMaxWidth;
+    card.style.boxShadow=origShadow;
+    // 태그 width 복원
+    tags.forEach(t=>{
+      t.style.width='';
+      t.style.whiteSpace='';
+      t.style.overflow='';
+    });
+    allEls.forEach((el,i)=>{
+      el.style.fontFamily=origStyles[i].ff;
+      el.style.fontSize=origStyles[i].fs;
+      el.style.fontWeight=origStyles[i].fw;
+    });
+  };
 
   document.fonts.ready.then(()=>{
-    // 690px 고정 후 크기 측정
-    const cardW=card.offsetWidth;   // 690
-    const cardH=card.offsetHeight;
-
-    domtoimage.toPng(card,{
-      width: cardW * scale,   // 1380
-      height: cardH * scale,
-      style:{
-        transform: `scale(${scale})`,
-        transformOrigin: 'top left',
-        width: cardW + 'px',
-        height: cardH + 'px',
-        overflow: 'visible'
+    html2canvas(card,{
+      scale:2,
+      useCORS:true,
+      allowTaint:true,
+      backgroundColor:null,
+      logging:false,
+      onclone:(clonedDoc)=>{
+        const style=clonedDoc.createElement('style');
+        style.textContent=`
+          * { font-family: ${bodyFont} !important; }
+          #sheetNickname { font-family: ${nickFont} !important; font-size: ${nickSize} !important; }
+          .sheet-tag { white-space:nowrap !important; overflow:hidden !important;
+            font-size:${bodySize} !important; font-weight:${bodyWeight} !important;
+            padding:5px 9px 4px 9px !important; display:inline-block !important; }
+          .sheet-text,.sheet-onemsg,.sheet-sec-label,.sheet-handle,.sheet-badge {
+            font-size:${bodySize} !important; font-weight:${bodyWeight} !important; }
+        `;
+        clonedDoc.head.appendChild(style);
+        // 아바타 그림자 없음
       }
-    }).then(dataUrl=>{
-      card.style.width=origWidth;
-      card.style.maxWidth=origMaxWidth;
+    }).then(canvas=>{
+      restore();
       const a=document.createElement('a');
       a.download='robinbus_sheet.png';
-      a.href=dataUrl;
+      a.href=canvas.toDataURL('image/png');
       a.click();
-    }).catch(()=>{
-      card.style.width=origWidth;
-      card.style.maxWidth=origMaxWidth;
-    });
+    }).catch(()=>restore());
   });
 }
 
