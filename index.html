@@ -221,10 +221,11 @@ header{
   backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);
 }
 
+.sheet-content{display:flex;flex-direction:column;}
 /* 본문 2컬럼 */
-.sheet-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.sheet-body{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;position:relative;}
 .sheet-col{padding:16px 18px;}
-.sheet-col:first-child{border-right:1px solid rgba(255,255,255,.1);}
+.sheet-body-divider{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.1);}
 .sheet-sec{margin-bottom:13px;}
 .sheet-sec:last-child{margin-bottom:0;}
 .sheet-sec-label{
@@ -234,9 +235,10 @@ header{
 .sheet-sec-label::after{content:'';flex:1;height:1px;background:currentColor;opacity:.2;}
 .sheet-tags{display:flex;flex-wrap:wrap;gap:4px;}
 .sheet-tag{
-  padding:5px 9px 4px 9px;
+  padding:5px 9px 3px 9px;
   border-radius:5px;font-size:11px;
   display:inline-block;
+  line-height:normal;
   background:rgba(255,255,255,.13);color:rgba(255,255,255,.92);}
 .sheet-tag.red{background:rgba(180,40,40,.4)!important;color:#ffd0d0!important;}
 .sheet-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:10px 0;}
@@ -249,8 +251,7 @@ header{
 }
 .sheet-footer{
   padding:9px 18px;display:flex;justify-content:space-between;align-items:center;
-  background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)), #0a1628;
-  font-size:10px;color:rgba(255,255,255,.5);
+  background:rgba(255,255,255,.05);font-size:10px;color:rgba(255,255,255,.5);
 }
 .sheet-full{padding:13px 18px 15px;}
 
@@ -625,8 +626,12 @@ header{
       </div>
     </div>
 
+    <!-- 본문 전체 래퍼 -->
+    <div class="sheet-content" id="sheetContent">
+
     <!-- 본문 2컬럼 -->
     <div class="sheet-body" id="sheetBody">
+      <div class="sheet-body-divider" id="sheetBodyDivider"></div>
 
       <!-- 왼쪽 컬럼: 울새버스 + 계정성향 -->
       <div class="sheet-col" id="sheetColLeft">
@@ -688,6 +693,8 @@ header{
       <span>울새버스 시트 생성기</span>
       <span>@kxxlem_all</span>
     </div>
+
+    </div><!-- /sheet-content -->
 
   </div><!-- /sheet-card -->
   </div><!-- /상단 wrap -->
@@ -774,7 +781,7 @@ function applyCustom(){
     `linear-gradient(to bottom, ${rgba(cc.hf,0)} 0%, ${rgba(cc.hf,0.6)} 100%)`;
 
   /* 본문 컬럼들 */
-  ['sheetBody','sheetColLeft','sheetColRight'].forEach(id=>{
+  ['sheetContent','sheetBody','sheetColLeft','sheetColRight'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.style.background=cc.bg; el.style.color=cc.bt; }
   });
@@ -785,7 +792,7 @@ function applyCustom(){
 
   /* 푸터 */
   const foot=document.getElementById('sheetFooter');
-  foot.style.background=`linear-gradient(rgba(255,255,255,0.05),rgba(255,255,255,0.05)), ${cc.bg}`;
+  foot.style.background='rgba(255,255,255,0.05)';
   foot.style.color=rgba(cc.bt,0.6);
 
   /* 일반 태그 */
@@ -800,13 +807,13 @@ function applyCustom(){
   });
 
   /* divider */
-  document.querySelectorAll('#sheetCard .sheet-divider, #sheetCard .sheet-full').forEach(d=>{
+  document.querySelectorAll('#sheetCard .sheet-divider').forEach(d=>{
     d.style.borderTopColor=rgba(cc.sl,0.25);
     d.style.borderColor=rgba(cc.sl,0.15);
   });
   /* 컬럼 사이 구분선 */
-  const leftCol=document.getElementById('sheetColLeft');
-  if(leftCol) leftCol.style.borderRightColor=rgba(cc.sl,0.2);
+  const bodyDiv=document.getElementById('sheetBodyDivider');
+  if(bodyDiv) bodyDiv.style.background=rgba(cc.sl,0.2);
 
   /* onemsg */
   const om=document.getElementById('sheetOnemsg');
@@ -1031,8 +1038,8 @@ function applyFont(){
   document.querySelectorAll('#sheetCard .sheet-tag').forEach(el=>{
     el.style.fontSize=bodySize+'px';
     el.style.fontWeight=bodyWeight;
-    el.style.lineHeight='1.4';
-    el.style.padding='4px 9px 3px 9px';
+    el.style.padding='5px 9px 3px 9px';
+    el.style.lineHeight='normal';
   });
   updateSizeLabel();
 }
@@ -1121,6 +1128,13 @@ function saveImage(){
       backgroundColor:null,
       logging:false,
       onclone:(clonedDoc)=>{
+        // sheetCard box-shadow 제거, overflow hidden 명시
+        const clonedCard=clonedDoc.getElementById('sheetCard');
+        if(clonedCard){
+          clonedCard.style.boxShadow='none';
+          clonedCard.style.overflow='hidden';
+        }
+
         const style=clonedDoc.createElement('style');
         style.textContent=`
           #sheetNickname { font-family: ${nickFont} !important; font-size: ${nickSize} !important; }
@@ -1140,19 +1154,24 @@ function saveImage(){
           const dst=clonedDoc.getElementById(srcId);
           if(src&&dst) dst.setAttribute('style', src.getAttribute('style')||'');
         };
-        ['sheetBody','sheetColLeft','sheetColRight','secOnemsgWrap','sheetFooter',
-         'sheetBannerBg','sheetBannerOverlay','sheetOnemsg'].forEach(copyInline);
+        ['sheetContent','sheetBody','sheetColLeft','sheetColRight','sheetFooter',
+         'sheetBannerBg','sheetBannerOverlay','sheetOnemsg','sheetBodyDivider'].forEach(copyInline);
 
-        // 태그, sec-label, divider 인라인 스타일도 복사
+        // secOnemsgWrap 인라인 복사
+        const srcWrap=document.getElementById('secOnemsgWrap');
+        const dstWrap=clonedDoc.getElementById('secOnemsgWrap');
+        if(srcWrap&&dstWrap){
+          dstWrap.setAttribute('style', srcWrap.getAttribute('style')||'');
+        }
+
+        // sec-label, divider 인라인 스타일 복사
         const copyAllByClass=(cls)=>{
           const srcs=document.querySelectorAll('#sheetCard .'+cls);
           const dsts=clonedDoc.querySelectorAll('#sheetCard .'+cls);
           srcs.forEach((s,i)=>{ if(dsts[i]) dsts[i].setAttribute('style', s.getAttribute('style')||''); });
         };
-        copyAllByClass('sheet-tag');
         copyAllByClass('sheet-sec-label');
         copyAllByClass('sheet-divider');
-        copyAllByClass('sheet-col');
       }
     }).then(canvas=>{
       restore();
