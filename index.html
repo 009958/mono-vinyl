@@ -232,7 +232,7 @@ header{
 .sheet-sec-label::after{content:'';flex:1;height:1px;background:currentColor;opacity:.2;}
 .sheet-tags{display:flex;flex-wrap:wrap;gap:4px;}
 .sheet-tag{
-  padding:5px 9px 2px 9px;
+  padding:4px 9px;
   border-radius:5px;font-size:11px;
   display:inline-block;
   vertical-align:middle;
@@ -1043,10 +1043,23 @@ function saveImage(){
   card.style.width='690px';
   card.style.maxWidth='690px';
 
+  const scale=2;
+
   document.fonts.ready.then(()=>{
+    // 실제 렌더 크기 측정
+    const cardW=card.offsetWidth;
+    const cardH=card.offsetHeight;
+
     domtoimage.toPng(card,{
-      quality:1,
-      bgcolor:null
+      width: cardW * scale,
+      height: cardH * scale,
+      style:{
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: cardW + 'px',
+        height: cardH + 'px',
+        overflow: 'visible'
+      }
     }).then(dataUrl=>{
       card.style.width=origWidth;
       card.style.maxWidth=origMaxWidth;
