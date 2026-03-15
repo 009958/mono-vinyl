@@ -592,8 +592,9 @@ header{
   <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
     <div style="margin-bottom:16px;text-align:center;">
       <div class="preview-label" style="margin-bottom:5px;">PREVIEW — 실시간 미리보기</div>
+		<br>
       <div id="sizeLabel" style="font-size:10px;color:var(--text-sub);font-family:'Gmarket Sans',sans-serif;letter-spacing:.5px;">
-        이미지 픽셀 사이즈: <span style="color:var(--accent2);font-weight:700;">1380 × <span id="sheetHeightPx">—</span> px</span>
+        이미지 사이즈: <span style="color:var(--accent2);font-weight:700;">1380 × <span id="sheetHeightPx">—</span> px</span> | 해당 사이즈로 저장됩니다.
       </div>
     </div>
 
@@ -1014,6 +1015,7 @@ function applyFont(){
     el.style.fontSize=bodySize+'px';
     el.style.fontWeight=bodyWeight;
   });
+  updateSizeLabel();
 }
 
 /* ── 이미지 저장 ── */
@@ -1032,7 +1034,7 @@ function saveImage(){
     card.style.width=origWidth;
     card.style.maxWidth=origMaxWidth;
     const a=document.createElement('a');
-    a.download='robinbus_sheet.png';
+    a.download='robinverse_sheet.png';
     a.href=canvas.toDataURL('image/png');
     a.click();
   }).catch(()=>{
