@@ -249,9 +249,10 @@ header{
 }
 .sheet-footer{
   padding:9px 18px;display:flex;justify-content:space-between;align-items:center;
-  background:rgba(0,0,0,.25);font-size:10px;color:rgba(255,255,255,.5);
+  background:linear-gradient(rgba(255,255,255,.25),rgba(255,255,255,.25)), #0a1628;
+  font-size:10px;color:rgba(255,255,255,.5);
 }
-.sheet-full{padding:13px 18px 15px;border-top:1px solid rgba(255,255,255,.1);}
+.sheet-full{padding:13px 18px 15px;}
 
 @media(max-width:600px){
   body{overflow:auto;}
@@ -784,7 +785,7 @@ function applyCustom(){
 
   /* 푸터 */
   const foot=document.getElementById('sheetFooter');
-  foot.style.background=rgba(cc.bg,0.85);
+  foot.style.background=`linear-gradient(rgba(255,255,255,0.25),rgba(255,255,255,0.25)), ${cc.bg}`;
   foot.style.color=rgba(cc.bt,0.6);
 
   /* 일반 태그 */
@@ -1055,6 +1056,11 @@ function saveImage(){
   const bodySize=document.getElementById('bodySize').value+'px';
   const bodyWeight=document.getElementById('bodyWeight').value;
 
+  // footer 스타일 건드리지 않음 (복원용으로만 저장)
+  const footer=document.getElementById('sheetFooter');
+  const footerBg=footer?footer.style.background:'';
+  const footerColor=footer?footer.style.color:'';
+
   // 태그 width 고정 (줄바꿈 방지)
   const tags=card.querySelectorAll('.sheet-tag');
   tags.forEach(t=>{
@@ -1072,14 +1078,15 @@ function saveImage(){
     if(el.id==='sheetNickname'){
       el.style.fontFamily=nickFont;
       el.style.fontSize=nickSize;
+    } else if(el.id==='sheetFooter'||el.closest('#sheetFooter')){
+      // footer는 건드리지 않음
     } else if(
       el.classList.contains('sheet-text')||
       el.classList.contains('sheet-onemsg')||
       el.classList.contains('sheet-tag')||
       el.classList.contains('sheet-sec-label')||
       el.classList.contains('sheet-handle')||
-      el.classList.contains('sheet-badge')||
-      el.classList.contains('sheet-footer')
+      el.classList.contains('sheet-badge')
     ){
       el.style.fontFamily=bodyFont;
       el.style.fontSize=bodySize;
@@ -1093,7 +1100,7 @@ function saveImage(){
     card.style.width=origWidth;
     card.style.maxWidth=origMaxWidth;
     card.style.boxShadow=origShadow;
-    // 태그 width 복원
+    if(footer){ footer.style.background=footerBg; footer.style.color=footerColor; }
     tags.forEach(t=>{
       t.style.width='';
       t.style.whiteSpace='';
@@ -1116,16 +1123,36 @@ function saveImage(){
       onclone:(clonedDoc)=>{
         const style=clonedDoc.createElement('style');
         style.textContent=`
-          * { font-family: ${bodyFont} !important; }
           #sheetNickname { font-family: ${nickFont} !important; font-size: ${nickSize} !important; }
           .sheet-tag { white-space:nowrap !important; overflow:hidden !important;
+            font-family: ${bodyFont} !important;
             font-size:${bodySize} !important; font-weight:${bodyWeight} !important;
             padding:5px 9px 4px 9px !important; display:inline-block !important; }
-          .sheet-text,.sheet-onemsg,.sheet-sec-label,.sheet-handle,.sheet-badge {
+          .sheet-text, .sheet-onemsg, .sheet-sec-label, .sheet-handle, .sheet-badge {
+            font-family: ${bodyFont} !important;
             font-size:${bodySize} !important; font-weight:${bodyWeight} !important; }
         `;
         clonedDoc.head.appendChild(style);
-        // 아바타 그림자 없음
+
+        // 원본의 인라인 스타일을 클론에 그대로 복사
+        const copyInline=(srcId)=>{
+          const src=document.getElementById(srcId);
+          const dst=clonedDoc.getElementById(srcId);
+          if(src&&dst) dst.setAttribute('style', src.getAttribute('style')||'');
+        };
+        ['sheetBody','sheetColLeft','sheetColRight','secOnemsgWrap','sheetFooter',
+         'sheetBannerBg','sheetBannerOverlay','sheetOnemsg'].forEach(copyInline);
+
+        // 태그, sec-label, divider 인라인 스타일도 복사
+        const copyAllByClass=(cls)=>{
+          const srcs=document.querySelectorAll('#sheetCard .'+cls);
+          const dsts=clonedDoc.querySelectorAll('#sheetCard .'+cls);
+          srcs.forEach((s,i)=>{ if(dsts[i]) dsts[i].setAttribute('style', s.getAttribute('style')||''); });
+        };
+        copyAllByClass('sheet-tag');
+        copyAllByClass('sheet-sec-label');
+        copyAllByClass('sheet-divider');
+        copyAllByClass('sheet-col');
       }
     }).then(canvas=>{
       restore();
