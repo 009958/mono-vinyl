@@ -1046,12 +1046,12 @@ function saveImage(){
   const scale=2;
 
   document.fonts.ready.then(()=>{
-    // 실제 렌더 크기 측정
-    const cardW=card.offsetWidth;
+    // 690px 고정 후 크기 측정
+    const cardW=card.offsetWidth;   // 690
     const cardH=card.offsetHeight;
 
     domtoimage.toPng(card,{
-      width: cardW * scale,
+      width: cardW * scale,   // 1380
       height: cardH * scale,
       style:{
         transform: `scale(${scale})`,
